@@ -44,6 +44,11 @@ auto Parser::parse_object_field() -> std::pair<std::string, Node>
             throw UnexpectedToken("null", "object field");
         case TokenType::Eof:
             throw UnexpectedToken("EOF", "object field");
+        case TokenType::Error:
+            throw UnexpectedToken("Error", "object field");
+        case TokenType::Id:
+            throw UnexpectedToken("Id", "object field");
+            break;
     }
 }
 
@@ -90,17 +95,15 @@ auto Parser::parse_value(Token token) -> Node
 {
     switch (token.type) {
         case TokenType::Int: {
-            auto int_text = text.substr(token.position, token.length);
-            int64_t integer = std::stoi(int_text);
+            int64_t integer = std::stoi(token.value(this->text));
             return { NodeType::Int, NodeVariantType { integer } };
         }
         case TokenType::Decimal: {
-            auto decimal_text = text.substr(token.position, token.length);
-            double decimal = std::stod(decimal_text);
+            double decimal = std::stod(token.value(this->text));
             return { NodeType::Double, NodeVariantType { decimal } };
         }
         case TokenType::String: {
-            auto string_text = text.substr(token.position + 1, token.length - 2);
+            auto string_text = text.substr(token.pos.index + 1, token.length - 2);
             return { NodeType::String, NodeVariantType { string_text } };
         }
         case TokenType::True: {
@@ -110,7 +113,7 @@ auto Parser::parse_value(Token token) -> Node
             return { NodeType::Bool, NodeVariantType { false } };
         }
         case TokenType::Null: {
-            return { NodeType::Null, NodeVariantType { NULL } };
+            return { NodeType::Null, NodeVariantType { nullptr } };
         }
 
         case TokenType::Colon:
@@ -127,6 +130,11 @@ auto Parser::parse_value(Token token) -> Node
             throw UnexpectedToken("[", "value");
         case TokenType::LBracket:
             throw UnexpectedToken("]", "value");
+        case TokenType::Error:
+            throw UnexpectedToken("Error", "value");
+        case TokenType::Id:
+            throw UnexpectedToken("Id", "value");
+            break;
     }
 };
 
@@ -155,6 +163,11 @@ auto Parser::parse() -> Node
         case TokenType::Comma:
             throw UnexpectedToken(",", "top-level");
         case TokenType::Eof:
-            return { NodeType::Null, NodeVariantType { NULL } };
+            return { NodeType::Null, NodeVariantType { nullptr } };
+        case TokenType::Error:
+            throw UnexpectedToken("Error", "value");
+        case TokenType::Id:
+            throw UnexpectedToken("Id", "value");
+            break;
     }
 };

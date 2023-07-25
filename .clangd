@@ -11,8 +11,8 @@ Diagnostics:
             - readability-*
             - modernize-use-noexcept
         Remove:
-            # - modernize-use-nodiscard
-            readability-magic-numbers
+            - modernize-use-nodiscard
+            - readability-magic-numbers
         CheckOptions:
             readability-identifier-naming.IgnoreMainLikeFunctions: true
             cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true

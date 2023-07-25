@@ -1,11 +1,13 @@
 #pragma once
 #include "lexer.hpp"
+#include "position.hpp"
 #include <cassert>
 #include <cstddef>
 #include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <variant>
@@ -152,9 +154,9 @@ private:
     auto parse_value(Token token) -> Node;
 
 public:
-    Parser(std::string text)
+    Parser(std::string_view text, ErrorCollector* errors)
         : text(text)
-        , lexer(Lexer(text)) {};
+        , lexer(Lexer(text, errors)) {};
 
     auto parse() -> Node;
 };

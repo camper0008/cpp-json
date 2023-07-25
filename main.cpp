@@ -1,4 +1,5 @@
 #include "parser.hpp"
+#include "position.hpp"
 #include <format>
 #include <iostream>
 
@@ -6,7 +7,7 @@ using namespace std::literals;
 
 auto main() -> int
 {
-    std::string text = R"({
+    auto text = R"({
         "firstName": "John",
         "lastName": "Smith",
         "isAlive": true,
@@ -33,9 +34,10 @@ auto main() -> int
             "Trevor"
         ],
         "spouse": null
-    })";
+    })"s;
 
-    auto parser = Parser(text);
+    auto errors = ErrorCollector {};
+    auto parser = Parser(text, &errors);
     auto tree = parser.parse();
     auto type = std::string(tree["phoneNumbers"s][1]["type"s]);
     std::cout << std::format("please let '{}' equal 'office'\n", type);

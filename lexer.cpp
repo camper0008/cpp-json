@@ -1,104 +1,109 @@
 #include "lexer.hpp"
+#include "position.hpp"
+#include <format>
 #include <iostream>
 
-void Lexer::step()
+static const std::unordered_map<std::string, TokenType> keyword_token_types = {
+    { "null", TokenType::Null },
+    { "false", TokenType::False },
+    { "true", TokenType::True },
+};
+
+auto keyword_token_type(std::string& value) noexcept -> TokenType
 {
-    auto current = text[this->position];
-    if (current == '\n') {
-        this->line++;
-        this->column = 1;
+    if (auto type = keyword_token_types.find(value); type != keyword_token_types.end()) {
+        return type->second;
     }
-    else {
-        this->column++;
-    }
-    this->position++;
+    return TokenType::Id;
 }
 
-auto Lexer::number() -> Token
+auto Lexer::lex_number() -> Token
 {
-    auto current_position = this->position;
-    auto current_column = this->column;
-    auto current_line = this->line;
+    const auto pos = position();
     auto is_decimal = false;
-    size_t len = 1;
     step();
-    while ((text[this->position] >= '0' && text[this->position] <= '9')
-           || text[this->position] == '.') {
-        auto current = text[this->position];
-        if (current == '.') {
+    while ((current() >= '0' and current() <= '9') or current() == '.') {
+        if (current() == '.') {
             is_decimal = true;
         }
-        len++;
         step();
     }
-
-    auto token = Token {
-        is_decimal ? TokenType::Decimal : TokenType::Int,
-        current_position,
-        len,
-        current_line,
-        current_column,
-    };
-
-    return token;
+    return token(is_decimal ? TokenType::Decimal : TokenType::Int, pos);
 }
 
-auto Lexer::str() -> Token
+auto Lexer::lex_string() -> Token
 {
-    auto current_position = this->position;
-    auto current_column = this->column;
-    auto current_line = this->line;
+    const auto pos = position();
     auto is_escaped = false;
-    size_t len = 1;
     step();
-    while (text[this->position] != '"' || is_escaped) {
-        auto current = text[this->position];
+    while (not done() and (current() != '"' or is_escaped)) {
         if (is_escaped) {
             is_escaped = false;
         }
-        else if (current == '\\') {
+        else if (current() == '\\') {
             is_escaped = true;
         }
-        len++;
         step();
     }
-    len++;
+    if (is_escaped or not current_is('"')) {
+        this->errors->add({ pos, "malformed string" });
+        return token(TokenType::Error, pos);
+    }
     step();
 
-    auto token = Token {
-        TokenType::String,
-        current_position,
-        len,
-        current_line,
-        current_column,
-    };
-
-    return token;
+    return token(TokenType::String, pos);
 }
 
-auto Lexer::n_token(TokenType type, size_t len) -> Token
+auto Lexer::lex_id() -> Token
 {
-    auto current_position = this->position;
-    auto current_column = this->column;
-    auto current_line = this->line;
-    for (size_t i = 0; i < len; i++) {
+    const auto pos = position();
+    const auto is_id_char = [](char value) constexpr {
+        return (value >= '0' and value <= '9') or (value >= 'a' and value <= 'z')
+               or (value >= 'A' and value <= 'Z');
+    };
+    while (not done() and is_id_char(current())) {
         step();
     }
-
-    auto token = Token {
-        type,
-        current_position,
-        len,
-        current_line,
-        current_column,
-    };
-
-    return token;
+    auto value = pos.value(this->text, this->index - pos.index);
+    return token(keyword_token_type(value), pos);
 }
 
 auto Lexer::skip_comment() -> Token
 {
-    while (text[this->position] != '\n') {
+    auto pos = position();
+    step();
+    if (current_is('*')) {
+        step();
+        auto depth = 1;
+        auto last = std::optional<char>();
+        while (not done() and depth > 0) {
+            if (last and *last == '*' and current() == '/') {
+                depth -= 1;
+            }
+            else if (last and *last == '/' and current() == '*') {
+                depth += 1;
+            }
+            last = current();
+        }
+        if (depth > 0) {
+            this->errors->add({ pos, "malformed multiline comment" });
+            return token(TokenType::Error, pos);
+        }
+        return next();
+    }
+    if (current_is('/')) {
+        while (not done() and current() != '\n') {
+            step();
+        }
+        return next();
+    }
+    errors->add({ pos, "malformed comment" });
+    return token(TokenType::Error, pos);
+}
+
+auto Lexer::skip_whitespace() -> Token
+{
+    while (current_is(' ') or current_is('\t') or current_is('\r') or current_is('\n')) {
         step();
     }
     return next();
@@ -106,62 +111,39 @@ auto Lexer::skip_comment() -> Token
 
 auto Lexer::next() -> Token
 {
-    if (position >= text.length()) {
-        return n_token(TokenType::Eof, 0);
+    const auto pos = position();
+    if (done()) {
+        return token(TokenType::Eof, pos);
     }
-    auto current = text[this->position];
-    switch (current) {
-        case '{':
-            return n_token(TokenType::LBrace, 1);
-        case '}':
-            return n_token(TokenType::RBrace, 1);
-        case '[':
-            return n_token(TokenType::LBracket, 1);
-        case ']':
-            return n_token(TokenType::RBracket, 1);
-        case ':':
-            return n_token(TokenType::Colon, 1);
-        case ',':
-            return n_token(TokenType::Comma, 1);
-        case '\n':
+    switch (current()) {
         case ' ':
-        case '\t': {
-            step();
-            return next();
-        }
-        case 'n': {
-            std::string text_repr = "null";
-            return n_token(TokenType::Null, text_repr.length());
-        }
-        case 'f': {
-            std::string text_repr = "false";
-            return n_token(TokenType::False, text_repr.length());
-        }
-        case 't': {
-            std::string text_repr = "true";
-            return n_token(TokenType::True, text_repr.length());
-        }
-        case '/': {
+        case '\t':
+        case '\r':
+        case '\n':
+            return skip_whitespace();
+        case '/':
             return skip_comment();
-        }
-
-        case '"': {
-            return str();
-        }
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9': {
-            return number();
-        }
+        case '{':
+            return (step(), token(TokenType::LBrace, pos));
+        case '}':
+            return (step(), token(TokenType::RBrace, pos));
+        case '[':
+            return (step(), token(TokenType::LBracket, pos));
+        case ']':
+            return (step(), token(TokenType::RBracket, pos));
+        case ':':
+            return (step(), token(TokenType::Colon, pos));
+        case ',':
+            return (step(), token(TokenType::Comma, pos));
+        case '0' ... '9':
+            return lex_number();
+        case '"':
+            return lex_string();
+        case 'A' ... 'Z':
+        case 'a' ... 'z':
+            return lex_id();
         default: {
-            std::cout << "[LEXER] unrecognized character: " << current << "\n";
+            std::cerr << std::format("[LEXER] unrecognized character: '{}'\n", current());
             std::exit(1);
         };
     }
