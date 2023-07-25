@@ -100,7 +100,7 @@ auto Parser::parse_value(Token token) -> Node
          return { NodeType::Double, NodeVariantType { decimal } };
       }
       case TokenType::String: {
-         auto string_text = text.substr(token.position + 1, token.length - 1);
+         auto string_text = text.substr(token.position + 1, token.length - 2);
          return { NodeType::String, NodeVariantType { string_text } };
       }
       case TokenType::True: {

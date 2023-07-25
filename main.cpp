@@ -35,4 +35,8 @@ auto main() -> int
 
    auto parser = Parser(text);
    auto tree = parser.parse();
+   std::string idx0 = "phoneNumbers";
+   std::string idx1 = "type";
+   std::string type = tree[idx0][1][idx1];
+   std::cout << type << "\n";
 }

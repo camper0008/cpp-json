@@ -2,6 +2,7 @@
 #include "lexer.hpp"
 #include <cassert>
 #include <cstddef>
+#include <iostream>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -125,7 +126,8 @@ class Node {
       if (!std::holds_alternative<std::unordered_map<std::string, Node>>(this->value)) {
          throw InvalidTypeAccess(NodeType::Object, this->type);
       }
-      return std::get<std::unordered_map<std::string, Node>>(this->value).at(index);
+      auto map = std::get<std::unordered_map<std::string, Node>>(this->value);
+      return map.at(index);
    };
 
    Node(NodeType type, NodeVariantType value)
