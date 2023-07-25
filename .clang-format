@@ -1,10 +1,10 @@
 BasedOnStyle: WebKit
-IndentWidth: 3
+IndentWidth: 4
 BreakBeforeBraces: Stroustrup
 IndentCaseLabels: true
 AlignTrailingComments: true
 ColumnLimit: 100
-ContinuationIndentWidth: 3
+ContinuationIndentWidth: 4
 # AlignAfterOpenBracket: true
 AlignOperands: true
 BinPackArguments: false
