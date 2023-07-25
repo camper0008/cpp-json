@@ -57,14 +57,14 @@ public:
     {
     }
 
-    auto next() -> Token;
+    auto next() noexcept -> Token;
 
 private:
-    auto lex_number() -> Token;
-    auto lex_string() -> Token;
-    auto lex_id() -> Token;
-    auto skip_comment() -> Token;
-    auto skip_whitespace() -> Token;
+    auto lex_number() noexcept -> Token;
+    auto lex_string() noexcept -> Token;
+    auto lex_id() noexcept -> Token;
+    auto skip_comment() noexcept -> Token;
+    auto skip_whitespace() noexcept -> Token;
 
     constexpr void step() noexcept
     {

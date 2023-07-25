@@ -17,7 +17,7 @@ auto keyword_token_type(std::string& value) noexcept -> TokenType
     return TokenType::Id;
 }
 
-auto Lexer::lex_number() -> Token
+auto Lexer::lex_number() noexcept -> Token
 {
     const auto pos = position();
     auto is_decimal = false;
@@ -31,7 +31,7 @@ auto Lexer::lex_number() -> Token
     return token(is_decimal ? TokenType::Decimal : TokenType::Int, pos);
 }
 
-auto Lexer::lex_string() -> Token
+auto Lexer::lex_string() noexcept -> Token
 {
     const auto pos = position();
     auto is_escaped = false;
@@ -54,7 +54,7 @@ auto Lexer::lex_string() -> Token
     return token(TokenType::String, pos);
 }
 
-auto Lexer::lex_id() -> Token
+auto Lexer::lex_id() noexcept -> Token
 {
     const auto pos = position();
     const auto is_id_char = [](char value) constexpr {
@@ -68,7 +68,7 @@ auto Lexer::lex_id() -> Token
     return token(keyword_token_type(value), pos);
 }
 
-auto Lexer::skip_comment() -> Token
+auto Lexer::skip_comment() noexcept -> Token
 {
     auto pos = position();
     step();
@@ -101,7 +101,7 @@ auto Lexer::skip_comment() -> Token
     return token(TokenType::Error, pos);
 }
 
-auto Lexer::skip_whitespace() -> Token
+auto Lexer::skip_whitespace() noexcept -> Token
 {
     while (current_is(' ') or current_is('\t') or current_is('\r') or current_is('\n')) {
         step();
@@ -109,7 +109,7 @@ auto Lexer::skip_whitespace() -> Token
     return next();
 }
 
-auto Lexer::next() -> Token
+auto Lexer::next() noexcept -> Token
 {
     const auto pos = position();
     if (done()) {
