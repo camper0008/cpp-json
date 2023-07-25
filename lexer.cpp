@@ -143,8 +143,9 @@ auto Lexer::next() -> Token
         case 'a' ... 'z':
             return lex_id();
         default: {
-            std::cerr << std::format("[LEXER] unrecognized character: '{}'\n", current());
-            std::exit(1);
+            this->errors->add({ pos, std::format("unrecognized character '{}'", current()) });
+            step();
+            return token(TokenType::Error, pos);
         };
     }
 }
