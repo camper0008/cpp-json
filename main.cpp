@@ -33,10 +33,10 @@ auto main() -> int
       "spouse": null
     })";
 
+   using namespace std::string_literals;
+
    auto parser = Parser(text);
    auto tree = parser.parse();
-   std::string idx0 = "phoneNumbers";
-   std::string idx1 = "type";
-   std::string type = tree[idx0][1][idx1];
-   std::cout << type << "\n";
+   std::string type = tree["phoneNumbers"s][1]["type"s];
+   std::cout << type << "\n"; // "office"
 }
