@@ -1,0 +1,12 @@
+BasedOnStyle: WebKit
+IndentWidth: 3
+BreakBeforeBraces: Stroustrup
+IndentCaseLabels: true
+AlignTrailingComments: true
+ColumnLimit: 100
+ContinuationIndentWidth: 3
+# AlignAfterOpenBracket: true
+AlignOperands: true
+BinPackArguments: false
+BinPackParameters: false
+# AllowAllArgumentsOnNextLine: true

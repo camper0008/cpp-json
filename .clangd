@@ -1,0 +1,27 @@
+# irrelevant unless something like meson generates one
+# CompileFlags:
+#     CompilationDatabase: "./builddir"
+Diagnostics:
+    ClangTidy:
+        Add:
+            - bugprone-*
+            - clang-analyser-*
+            - cppcoreguidelines-*
+            - modernize-*
+            - readability-*
+            - modernize-use-noexcept
+        Remove:
+            # - modernize-use-nodiscard
+            readability-magic-numbers
+        CheckOptions:
+            readability-identifier-naming.IgnoreMainLikeFunctions: true
+            cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor: true
+            readability-identifier-length.IgnoredVariableNames: (x|y|z|i|id)
+            readability-identifier-length.IgnoredParameterNames: (x|y|z|i|id)
+
+            readability-identifier-naming.FunctionCase: lower_case
+            readability-identifier-naming.MemberCase: lower_case
+            readability-identifier-naming.MethodCase: lower_case
+            readability-identifier-naming.ParameterCase: lower_case
+            readability-identifier-naming.VariableCase: lower_case
+    UnusedIncludes: Strict
