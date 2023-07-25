@@ -1,2 +1,5 @@
-a.out
+
 *.hpp.gch
+build/
+compile_flags.txt
+
