@@ -1,4 +1,4 @@
-#include "lexer.hpp"
+#include "parser.hpp"
 #include <iostream>
 
 auto main() -> int
@@ -33,14 +33,6 @@ auto main() -> int
       "spouse": null
     })";
 
-   auto lexer = Lexer(text);
-
-   while (true) {
-      auto next = lexer.next();
-      if (next.type == TokenType::Eof) {
-         break;
-      }
-      std::cout << "[L " << next.line << ", C " << next.column << ", I " << next.position << "] "
-                << text.substr(next.position, next.length) << "\n";
-   }
+   auto parser = Parser(text);
+   auto tree = parser.parse();
 }

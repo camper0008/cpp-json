@@ -5,12 +5,10 @@
 #include <string>
 #include <utility>
 
-auto Parser::parse_object_field() -> std::optional<std::pair<std::string, Node>>
+auto Parser::parse_object_field() -> std::pair<std::string, Node>
 {
    auto key = lexer.next();
    switch (key.type) {
-      case TokenType::RBrace:
-         return {};
       case TokenType::String: {
          auto colon = lexer.next();
          if (colon.type != TokenType::Colon) {
@@ -18,15 +16,12 @@ auto Parser::parse_object_field() -> std::optional<std::pair<std::string, Node>>
          };
          auto value = Parser::parse();
 
-         auto brace_or_comma = lexer.next();
-
-         if (brace_or_comma.type == TokenType::RBrace || brace_or_comma.type == TokenType::Comma) {
-            std::string key_node = parse_value(key);
-            auto pair = std::make_pair(key_node, value);
-            return { pair };
-         }
-         throw UnexpectedToken("NOT , OR }", "object field");
+         std::string key_node = parse_value(key);
+         auto pair = std::make_pair(key_node, value);
+         return { pair };
       }
+      case TokenType::RBrace:
+         throw UnexpectedToken("}", "object field");
       case TokenType::LBrace:
          throw UnexpectedToken("{", "object field");
       case TokenType::RBracket:
@@ -58,13 +53,16 @@ auto Parser::parse_object() -> Node
    auto map = std::unordered_map<std::string, Node> {};
    while (true) {
       auto next_field = parse_object_field();
-      if (next_field) {
-         auto key = next_field->first;
-         auto value = next_field->second;
-         map.emplace(key, value);
-      }
-      else {
+      auto key = next_field.first;
+      auto value = next_field.second;
+      map.emplace(key, value);
+
+      auto next_token = lexer.next();
+      if (next_token.type == TokenType::RBrace) {
          break;
+      }
+      if (next_token.type != TokenType::Comma) {
+         throw UnexpectedToken("NOT ,", "object");
       }
    }
    return { NodeType::Object, NodeVariantType { map } };
@@ -79,7 +77,7 @@ auto Parser::parse_array() -> Node
       array.emplace_back(next);
 
       auto next_token = lexer.next();
-      if (next_token.type == TokenType::LBracket) {
+      if (next_token.type == TokenType::RBracket) {
          break;
       }
       if (next_token.type != TokenType::Comma) {
