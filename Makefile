@@ -15,9 +15,11 @@ all: $(PROGRAM) compile_flags.txt
 $(PROGRAM): $(OBJECT_FILES)
 	$(CXX) $^ -o $(BUILD_FOLDER)/$@
 
-$(BUILD_FOLDER)/%.o: $(SOURCE_FOLDER)/%.cpp $(HPP_FILES)
-	mkdir $(@D) -p
+$(BUILD_FOLDER)/%.o: $(SOURCE_FOLDER)/%.cpp $(HPP_FILES) build_folder
 	$(CXX) $< -c -o $@ $(CPP_FLAGS)
+
+build_folder:
+	mkdir $(BUILD_FOLDER) -p
 
 compile_flags.txt:
 	echo -xc++ $(CPP_FLAGS) | sed 's/\s\+/\n/g' > compile_flags.txt
