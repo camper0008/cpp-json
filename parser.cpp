@@ -1,9 +1,11 @@
 #include "parser.hpp"
 #include <cstddef>
+#include <map>
 #include <optional>
 #include <string>
+#include <utility>
 
-auto Parser::parse_object_field() -> std::optional<Node>
+auto Parser::parse_object_field() -> std::optional<std::pair<std::string, Node>>
 {
    auto key = lexer.next();
    switch (key.type) {
@@ -18,13 +20,10 @@ auto Parser::parse_object_field() -> std::optional<Node>
 
          auto brace_or_comma = lexer.next();
 
-         if (brace_or_comma.type == TokenType::RBrace) {
-            auto map = std::unordered_map<std::string, Node>();
-            map.emplace(key, value);
-            return { { NodeType::Double, NodeVariantType { map } } };
-         }
-         if (brace_or_comma.type == TokenType::Comma) {
-            throw "todo!";
+         if (brace_or_comma.type == TokenType::RBrace || brace_or_comma.type == TokenType::Comma) {
+            std::string key_node = parse_value(key);
+            auto pair = std::make_pair(key_node, value);
+            return { pair };
          }
          throw UnexpectedToken("NOT , OR }", "object field");
       }
@@ -53,11 +52,42 @@ auto Parser::parse_object_field() -> std::optional<Node>
    }
 }
 
-auto Parser::parse_object() -> Node {
+auto Parser::parse_object() -> Node
+{
    // current = {
+   auto map = std::unordered_map<std::string, Node> {};
+   while (true) {
+      auto next_field = parse_object_field();
+      if (next_field) {
+         auto key = next_field->first;
+         auto value = next_field->second;
+         map.emplace(key, value);
+      }
+      else {
+         break;
+      }
+   }
+   return { NodeType::Object, NodeVariantType { map } };
 };
 
-auto Parser::parse_array() -> Node {};
+auto Parser::parse_array() -> Node
+{
+   // current = [
+   auto array = std::vector<Node> {};
+   while (true) {
+      auto next = parse();
+      array.emplace_back(next);
+
+      auto next_token = lexer.next();
+      if (next_token.type == TokenType::LBracket) {
+         break;
+      }
+      if (next_token.type != TokenType::Comma) {
+         throw UnexpectedToken("NOT ,", "array");
+      }
+   }
+   return { NodeType::Array, NodeVariantType { array } };
+};
 auto Parser::parse_value(Token token) -> Node
 {
    switch (token.type) {
@@ -105,6 +135,7 @@ auto Parser::parse_value(Token token) -> Node
 auto Parser::parse() -> Node
 {
    auto next = lexer.next();
+
    switch (next.type) {
       case TokenType::LBrace:
          return parse_object();

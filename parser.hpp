@@ -144,7 +144,7 @@ class Parser {
    std::string text;
    Lexer lexer;
 
-   auto parse_object_field() -> std::optional<Node>;
+   auto parse_object_field() -> std::optional<std::pair<std::string, Node>>;
    auto parse_object() -> Node;
    auto parse_array() -> Node;
    auto parse_value(Token token) -> Node;
